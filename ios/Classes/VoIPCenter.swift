@@ -103,7 +103,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
 
-        let info = self.parse(payload: payload)
+        let info = payload.dictionaryPayload
         let callerName = info?["incoming_caller_name"] as! String
         self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
                                         callerId: info?["incoming_caller_id"] as! String,
