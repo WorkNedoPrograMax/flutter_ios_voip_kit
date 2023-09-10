@@ -100,24 +100,29 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     // NOTE: iOS11 or more support
 
-    public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
-        print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
+     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
+            print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
 
-        let info = payload.dictionaryPayload
-        let callerName = info?["incoming_caller_name"] as! String
-        self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
-                                        callerId: info?["incoming_caller_id"] as! String,
-                                        callerName: callerName) { error in
-            if let error = error {
-                print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
-                return
+            let info = self.parse(payload: payload)
+            let pay = payload.dictionaryPayload
+            print("갑니다잉")
+            print(info)
+            print(pay)
+
+            // nil인 경우 기본값을 사용합니다.
+            let callerName = (info?["incoming_caller_name"] as? String) ?? "카달로그"
+            let uuidString = (info?["uuid"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
+            let callerId = (info?["incoming_caller_id"] as? String) ?? "default-caller-id"
+
+            self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
+                if let error = error {
+                    print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
+                    return
+                }
+                self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": info ?? [:], "incoming_caller_name": callerName])
+                completion()
             }
-            self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
-                             "payload": info as Any,
-                             "incoming_caller_name": callerName])
-            completion()
-        }
-    }
+     }
 
     // NOTE: iOS10 support
 
