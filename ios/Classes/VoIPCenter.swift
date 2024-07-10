@@ -103,6 +103,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
      public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
             print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
 
+            self.savePayloadAsString(payload: payload)
             let info = self.parse(payload: payload)
             let pay = payload.dictionaryPayload
             print("갑니다잉")
@@ -129,6 +130,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
 
+        self.savePayloadAsString(payload: payload)
         let info = self.parse(payload: payload)
         let callerName = info?["incoming_caller_name"] as! String
         self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
@@ -143,6 +145,18 @@ extension VoIPCenter: PKPushRegistryDelegate {
                              "incoming_caller_name": callerName])
         }
     }
+
+  private  func savePayloadAsString(payload: PKPushPayload) {
+            do {
+                let data = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    NSUserDefaults.standard.set(jsonString, forKey: "flutter.voipPayload")
+                    print("Payload saved as string successfully.")
+                }
+            } catch {
+                print("Error converting payload to string: \(error.localizedDescription)")
+            }
+        }
 
     private func parse(payload: PKPushPayload) -> [String: Any]? {
         do {
