@@ -150,7 +150,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
             do {
                 let data = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
                 if let jsonString = String(data: data, encoding: .utf8) {
-                    NSUserDefaults.standard.set(jsonString, forKey: "flutter.voipPayload")
+                    UserDefaults.standard.set(jsonString, forKey: "flutter.voipPayload")
                     print("Payload saved as string successfully.")
                 }
             } catch {
