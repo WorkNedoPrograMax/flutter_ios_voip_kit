@@ -103,7 +103,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
      public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
             print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
 
-            self.savePayloadAsString(payload: payload)
+            self.savePayloadAsStructuredString(payload: payload)
             let info = self.parse(payload: payload)
             let pay = payload.dictionaryPayload
             print("갑니다잉")
@@ -130,7 +130,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
 
-        self.savePayloadAsString(payload: payload)
+        self.savePayloadAsStructuredString(payload: payload)
         let info = self.parse(payload: payload)
         let callerName = info?["incoming_caller_name"] as! String
         self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
