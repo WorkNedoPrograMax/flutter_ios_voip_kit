@@ -146,14 +146,33 @@ extension VoIPCenter: PKPushRegistryDelegate {
         }
     }
 
-  private  func savePayloadAsString(payload: PKPushPayload) {
-            do {
-                let data = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    UserDefaults.standard.set(jsonString, forKey: "flutter.voipPayload")
-                    print("Payload saved as string successfully.")
-                }
-            } catch {
+  private func savePayloadAsStructuredString(payload: PKPushPayload) {
+      do {
+          // Step 1 & 2: Extract and parse the 'data' field from the payload
+          if let dataField = payload.dictionaryPayload["data"] as? [String: Any] {
+              // Step 3: Get the current date in milliseconds
+              let currentDate = Date()
+              let receiveDateInMilliseconds = Int(currentDate.timeIntervalSince1970 * 1000)
+
+              // Step 4: Extract the 'id' field from the payload for callId
+              let callId = payload.dictionaryPayload["id"] as? String ?? ""
+
+              // Step 5: Create a new dictionary with the required fields
+              var structuredData: [String: Any] = [:]
+              structuredData["chatId"] = dataField["chat_Id"]
+              structuredData["receiveDateInMilliseconds"] = receiveDateInMilliseconds
+              structuredData["doctorInfo"] = ["name": dataField["doctor_name"], "imageUrl": dataField["doctor_avatar"]]
+              structuredData["callId"] = callId
+
+              // Step 6: Convert the new dictionary to a JSON string
+              let jsonData = try JSONSerialization.data(withJSONObject: structuredData, options: [])
+              if let jsonString = String(data: jsonData, encoding: .utf8) {
+                  // Step 7: Save the JSON string to UserDefaults
+                  UserDefaults.standard.set(jsonString, forKey: "flutter.LAST_INCOMING_CALL")
+                  print("Structured payload saved as string successfully.")
+              }
+          }
+      } catch {
                 print("Error converting payload to string: \(error.localizedDescription)")
             }
         }
