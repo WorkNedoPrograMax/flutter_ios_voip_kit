@@ -111,9 +111,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
             print(pay)
 
             // nil인 경우 기본값을 사용합니다.
-            let callerName = (info?["incoming_caller_name"] as? String) ?? "카달로그"
-            let uuidString = (info?["uuid"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
-            let callerId = (info?["incoming_caller_id"] as? String) ?? "default-caller-id"
+            let callerName = (info?["nameCaller"] as? String) ?? "Dr.Alexa"
+            let uuidString = (info?["id"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
+            let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
 
             self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
                 if let error = error {
@@ -132,9 +132,9 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
         self.savePayloadAsStructuredString(payload: payload)
         let info = self.parse(payload: payload)
-        let callerName = info?["incoming_caller_name"] as! String
-        self.callKitCenter.incomingCall(uuidString: info?["uuid"] as! String,
-                                        callerId: info?["incoming_caller_id"] as! String,
+        let callerName = info?["nameCaller"] as! String
+        self.callKitCenter.incomingCall(uuidString: info?["id"] as! String,
+                                        callerId: info?["callerId"] as! String,
                                         callerName: callerName) { error in
             if let error = error {
                 print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
