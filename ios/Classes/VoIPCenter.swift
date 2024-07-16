@@ -111,7 +111,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
             print(pay)
 
             // nil인 경우 기본값을 사용합니다.
-            let callerName = (info?["nameCaller"] as? String) ?? "Dr.Alexa"
+            let callerName = (info?["data"] as? [String: Any])?["doctor_name"] as? String ?? "Dr.Alexa"
             let uuidString = (info?["id"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
             let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
 
@@ -132,7 +132,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
         self.savePayloadAsStructuredString(payload: payload)
         let info = self.parse(payload: payload)
-        let callerName = info?["nameCaller"] as! String
+        let callerName = (info?["data"] as? [String: Any])?["doctor_name"] as? String ?? "Dr.Alexa"
         self.callKitCenter.incomingCall(uuidString: info?["id"] as! String,
                                         callerId: info?["callerId"] as! String,
                                         callerName: callerName) { error in
