@@ -111,7 +111,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
             print(pay)
 
             // nil인 경우 기본값을 사용합니다.
-            let callerName = (info?["data"] as? [String: Any])?["doctor_name"] as? String ?? "Dr.Alexa"
+           let callerName = payload.dictionaryPayload["callerName"] as? String ?? "Dr.Alexa(default)"
             let uuidString = (info?["id"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
             let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
 
@@ -120,7 +120,14 @@ extension VoIPCenter: PKPushRegistryDelegate {
                     print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
                     return
                 }
-                self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": info ?? [:], "incoming_caller_name": callerName])
+                do {
+                    let payloadData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
+                    if let payloadString = String(data: payloadData, encoding: .utf8) {
+                        self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": payloadString, "incoming_caller_name": callerName])
+                    }
+                } catch {
+                    print("Error serializing payload to string: \(error.localizedDescription)")
+                }
                 completion()
             }
      }
@@ -132,7 +139,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
         self.savePayloadAsStructuredString(payload: payload)
         let info = self.parse(payload: payload)
-        let callerName = (info?["data"] as? [String: Any])?["doctor_name"] as? String ?? "Dr.Alexa"
+        let callerName = payload.dictionaryPayload["callerName"] as? String ?? "Dr.Alexa(default)"
         self.callKitCenter.incomingCall(uuidString: info?["id"] as! String,
                                         callerId: info?["callerId"] as! String,
                                         callerName: callerName) { error in
@@ -140,9 +147,14 @@ extension VoIPCenter: PKPushRegistryDelegate {
                 print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
                 return
             }
-            self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue,
-                             "payload": info as Any,
-                             "incoming_caller_name": callerName])
+           do {
+               let payloadData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
+               if let payloadString = String(data: payloadData, encoding: .utf8) {
+                   self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": payloadString, "incoming_caller_name": callerName])
+               }
+           } catch {
+               print("Error serializing payload to string: \(error.localizedDescription)")
+           }
         }
     }
 
