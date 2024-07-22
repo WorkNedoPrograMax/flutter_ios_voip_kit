@@ -123,7 +123,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
                 do {
                     let payloadData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
                     if let payloadString = String(data: payloadData, encoding: .utf8) {
-                        self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": payloadString, "incoming_caller_name": callerName])
+                       self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": ["value": payloadString], "incoming_caller_name": callerName])
                     }
                 } catch {
                     print("Error serializing payload to string: \(error.localizedDescription)")
@@ -150,7 +150,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
            do {
                let payloadData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
                if let payloadString = String(data: payloadData, encoding: .utf8) {
-                   self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": payloadString, "incoming_caller_name": callerName])
+                  self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": ["value": payloadString], "incoming_caller_name": callerName])
                }
            } catch {
                print("Error serializing payload to string: \(error.localizedDescription)")
