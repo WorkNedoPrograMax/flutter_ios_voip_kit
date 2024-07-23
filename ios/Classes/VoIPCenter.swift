@@ -102,8 +102,8 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
-
-        self.savePayloadAsStructuredString(payload: payload)
+let structuredData = createStructuredDataFromPayload(payload: payload)
+        self.savePayloadAsStructuredString(structuredData: structuredData)
         let info = self.parse(payload: payload)
         let pay = payload.dictionaryPayload
         print("갑니다잉")
@@ -111,17 +111,17 @@ extension VoIPCenter: PKPushRegistryDelegate {
         print(pay)
 
         // Use default values if nil
-        let callerName = payload.dictionaryPayload["callerName"] as? String ?? "Dr.Alexa(default)"
+        let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
         let uuidString = (info?["id"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
         let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
-
+  self.sendStructuredDataEvent(payload: payload, callerName: callerName)
         self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
             if let error = error {
                 print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
                 return
             }
             // Call sendStructuredDataEvent instead of manually serializing and sending the payload
-            self.sendStructuredDataEvent(payload: payload, callerName: callerName)
+
             completion()
         }
     }
@@ -130,15 +130,17 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
-
+let structuredData = createStructuredDataFromPayload(payload: payload)
+        self.savePayloadAsStructuredString(structuredData: structuredData)
         // Extract callerName from the payload, defaulting to "Dr.Alexa(default)" if not present.
-        let callerName = payload.dictionaryPayload["callerName"] as? String ?? "Dr.Alexa(default)"
+        let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
 
         // Call the existing CallKitCenter logic to handle the incoming call UI.
         if let info = self.parse(payload: payload),
            let uuidString = info["id"] as? String,
-           let callerId = info["callerId"] as? String {
 
+           let callerId = info["callerId"] as? String {
+  self.sendStructuredDataEvent(payload: payload, callerName: callerName)
             self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
                 if let error = error {
                     print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
@@ -146,7 +148,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
                 }
 
                 // Use the sendStructuredDataEvent function to process and send the payload.
-                self.sendStructuredDataEvent(payload: payload, callerName: callerName)
+
             }
         } else {
             print("❌ Error: Missing call information in payload.")
@@ -165,7 +167,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
             let receiveDateInMilliseconds = Int(currentDate.timeIntervalSince1970 * 1000)
             let callId = payload.dictionaryPayload["id"] as? String ?? ""
 
-            structuredData["chatId"] = dataField["chat_Id"]
+            structuredData["chatId"] = dataField["chat_id"]
             structuredData["receiveDateInMilliseconds"] = receiveDateInMilliseconds
             structuredData["doctorInfo"] = ["name": dataField["doctor_name"], "imageUrl": dataField["doctor_avatar"]]
             structuredData["callId"] = callId
@@ -173,18 +175,17 @@ extension VoIPCenter: PKPushRegistryDelegate {
         return structuredData
     }
 
-  private func savePayloadAsStructuredString(payload: PKPushPayload) {
-     let structuredData = createStructuredDataFromPayload(payload: payload)
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: structuredData, options: [])
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                UserDefaults.standard.set(jsonString, forKey: "flutter.LAST_INCOMING_CALL")
-                print("Structured payload saved as string successfully.")
-            }
-        } catch {
-            print("Error converting payload to string: \(error.localizedDescription)")
-        }
-        }
+ private func savePayloadAsStructuredString(structuredData: [String: Any]) {
+     do {
+         let jsonData = try JSONSerialization.data(withJSONObject: structuredData, options: [])
+         if let jsonString = String(data: jsonData, encoding: .utf8) {
+             UserDefaults.standard.set(jsonString, forKey: "flutter.LAST_INCOMING_CALL")
+             print("Structured payload saved as string successfully.")
+         }
+     } catch {
+         print("Error converting payload to string: \(error.localizedDescription)")
+     }
+ }
 
     private func parse(payload: PKPushPayload) -> [String: Any]? {
         do {
