@@ -112,7 +112,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
 
         // Use default values if nil
         let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
-        let uuidString = (info?["id"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
+        let uuidString = (structuredData["callId"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
         let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
   self.sendStructuredDataEvent(payload: payload, callerName: callerName)
         self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
