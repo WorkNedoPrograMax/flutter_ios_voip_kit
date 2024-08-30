@@ -109,6 +109,8 @@ class CallKitCenter: NSObject {
     }
 
     func endCall() {
+     UserDefaults.standard.removeObject(forKey: "flutter.LAST_INCOMING_CALL")
+     UserDefaults.standard.synchronize()
         let endCallAction = CXEndCallAction(call: self.uuid)
         let transaction = CXTransaction(action: endCallAction)
         self.controller.request(transaction) { error in
