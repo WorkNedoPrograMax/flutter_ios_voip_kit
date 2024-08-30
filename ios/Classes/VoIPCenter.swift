@@ -226,6 +226,7 @@ extension VoIPCenter: CXProviderDelegate {
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         print("❎ VoIP CXEndCallAction")
         if (self.callKitCenter.isCalleeBeforeAcceptIncomingCall) {
+           UserDefaults.standard.removeObject(forKey: "flutter.LAST_INCOMING_CALL")
             self.eventSink?(["event": EventChannel.onDidRejectIncomingCall.rawValue,
                              "uuid": self.callKitCenter.uuidString as Any,
                              "incoming_caller_id": self.callKitCenter.incomingCallerId as Any])
