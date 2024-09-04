@@ -102,6 +102,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
+        savePayloadToSharedPrefs(payload: payload)
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
         let info = self.parse(payload: payload)
@@ -130,6 +131,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
+           savePayloadToSharedPrefs(payload: payload)
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
         // Extract callerName from the payload, defaulting to "Dr.Alexa(default)" if not present.
@@ -158,6 +160,23 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
     private func sendStructuredDataEvent(payload: PKPushPayload, callerName: String) {
         let structuredData = createStructuredDataFromPayload(payload: payload)
         self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": structuredData, "incoming_caller_name": callerName])
+    }
+
+    private func savePayloadToSharedPrefs(payload: PKPushPayload) {
+        // Convert payload dictionary to JSON data
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
+
+            // Convert JSON data to string
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                // Save string to UserDefaults
+                UserDefaults.standard.set(jsonString, forKey: "flutter.PAYLOAD_STRING")
+                print("Payload saved to shared preferences successfully.")
+            }
+        } catch {
+          UserDefaults.standard.set("Error converting payload to string: \(error.localizedDescription)", forKey: "flutter.PAYLOAD_STRING")
+            print("Error converting payload to string: \(error.localizedDescription)")
+        }
     }
 
     private func createStructuredDataFromPayload(payload: PKPushPayload) -> [String: Any] {
