@@ -103,7 +103,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
 
            savePayloadToSharedPrefs(payload: payload)
-if isVideoCallAccepted(payload: payload) {
+if !isVideoCall(payload: payload) {
         // Call the functions to end the current call
 
         self.callKitCenter.disconnected(reason: .remoteEnded)
@@ -133,14 +133,13 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
             completion()
         }
         }
-          self.callKitCenter.disconnected(reason: .remoteEnded)
     }
 
     // NOTE: iOS10 support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
           savePayloadToSharedPrefs(payload: payload)
-        if isVideoCallAccepted(payload: payload) {
+        if !isVideoCall(payload: payload) {
                 // Call the functions to end the current call
                 self.callKitCenter.disconnected(reason: .remoteEnded)
                             UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
@@ -172,7 +171,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
             print("❌ Error: Missing call information in payload.")
         }
         }
-          self.callKitCenter.disconnected(reason: .remoteEnded)
+
     }
 
     private func sendStructuredDataEvent(payload: PKPushPayload, callerName: String) {
@@ -207,10 +206,10 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
        }
    }
 
-    private func isVideoCallAccepted(payload: PKPushPayload) -> Bool {
+    private func isVideoCall(payload: PKPushPayload) -> Bool {
         if let dataField = payload.dictionaryPayload["data"] as? [String: Any],
            let type = dataField["type"] as? String {
-            return type == "videoCallAccepted"
+            return type == "videoCall"
         }
         return false
     }
