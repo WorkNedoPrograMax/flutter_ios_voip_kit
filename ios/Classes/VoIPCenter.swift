@@ -101,21 +101,21 @@ extension VoIPCenter: PKPushRegistryDelegate {
     // NOTE: iOS11 or more support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
-        print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
+
+           savePayloadToSharedPrefs(payload: payload)
 if isVideoCallAccepted(payload: payload) {
         // Call the functions to end the current call
         self.callKitCenter.disconnected(reason: .remoteEnded)
+                  UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
         // Insert any additional code to end the call here
     }
     else{
-        savePayloadToSharedPrefs(payload: payload)
+
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
         let info = self.parse(payload: payload)
         let pay = payload.dictionaryPayload
-        print("갑니다잉")
-        print(info)
-        print(pay)
+
 
         // Use default values if nil
         let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
@@ -124,7 +124,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
   self.sendStructuredDataEvent(payload: payload, callerName: callerName)
         self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
             if let error = error {
-                print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
+
                 return
             }
             // Call sendStructuredDataEvent instead of manually serializing and sending the payload
@@ -137,14 +137,15 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
     // NOTE: iOS10 support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
-        print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
+          savePayloadToSharedPrefs(payload: payload)
         if isVideoCallAccepted(payload: payload) {
                 // Call the functions to end the current call
                 self.callKitCenter.disconnected(reason: .remoteEnded)
+                            UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
                 // Insert any additional code to end the call here
             }
             else{
-           savePayloadToSharedPrefs(payload: payload)
+
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
         // Extract callerName from the payload, defaulting to "Dr.Alexa(default)" if not present.
