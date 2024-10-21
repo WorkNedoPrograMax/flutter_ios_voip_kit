@@ -176,22 +176,31 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
         self.eventSink?(["event": EventChannel.onDidReceiveIncomingPush.rawValue, "payload": structuredData, "incoming_caller_name": callerName])
     }
 
-    private func savePayloadToSharedPrefs(payload: PKPushPayload) {
-        // Convert payload dictionary to JSON data
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
+   private func savePayloadToSharedPrefs(payload: PKPushPayload) {
+       // Convert payload dictionary to JSON data
+       do {
+           let jsonData = try JSONSerialization.data(withJSONObject: payload.dictionaryPayload, options: [])
 
-            // Convert JSON data to string
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                // Save string to UserDefaults
-                UserDefaults.standard.set(jsonString, forKey: "flutter.PAYLOAD_STRING")
-                print("Payload saved to shared preferences successfully.")
-            }
-        } catch {
-          UserDefaults.standard.set("Error converting payload to string: \(error.localizedDescription)", forKey: "flutter.PAYLOAD_STRING")
-            print("Error converting payload to string: \(error.localizedDescription)")
-        }
-    }
+           // Convert JSON data to string
+           if let jsonString = String(data: jsonData, encoding: .utf8) {
+               // Retrieve existing string from UserDefaults
+               let existingString = UserDefaults.standard.string(forKey: "flutter.PAYLOAD_STRING") ?? ""
+
+               // Create a new entry with the current timestamp
+               let timestamp = Date().timeIntervalSince1970
+               let newEntry = "\(timestamp):\(jsonString)"
+
+               // Append the new entry to the existing string
+               let updatedString = existingString.isEmpty ? newEntry : "\(existingString)\n\(newEntry)"
+
+               // Save the updated string back to UserDefaults
+               UserDefaults.standard.set(updatedString, forKey: "flutter.PAYLOAD_STRING")
+               print("Payload appended to shared preferences successfully.")
+           }
+       } catch {
+           print("Error converting payload to string: \(error.localizedDescription)")
+       }
+   }
 
     private func isVideoCallAccepted(payload: PKPushPayload) -> Bool {
         if let dataField = payload.dictionaryPayload["data"] as? [String: Any],
