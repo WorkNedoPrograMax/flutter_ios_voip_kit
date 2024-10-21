@@ -105,6 +105,7 @@ extension VoIPCenter: PKPushRegistryDelegate {
            savePayloadToSharedPrefs(payload: payload)
 if isVideoCallAccepted(payload: payload) {
         // Call the functions to end the current call
+
         self.callKitCenter.disconnected(reason: .remoteEnded)
                   UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
         // Insert any additional code to end the call here
@@ -132,6 +133,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
             completion()
         }
         }
+          self.callKitCenter.disconnected(reason: .remoteEnded)
     }
 
     // NOTE: iOS10 support
@@ -170,6 +172,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
             print("❌ Error: Missing call information in payload.")
         }
         }
+          self.callKitCenter.disconnected(reason: .remoteEnded)
     }
 
     private func sendStructuredDataEvent(payload: PKPushPayload, callerName: String) {
@@ -184,18 +187,19 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
 
            // Convert JSON data to string
            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    UserDefaults.standard.set(jsonString, forKey: "flutter.PAYLOAD_STRING")
                // Retrieve existing string from UserDefaults
-               let existingString = UserDefaults.standard.string(forKey: "flutter.PAYLOAD_STRING") ?? ""
-
-               // Create a new entry with the current timestamp
-               let timestamp = Date().timeIntervalSince1970
-               let newEntry = "\(timestamp):\(jsonString)"
-
-               // Append the new entry to the existing string
-               let updatedString = existingString.isEmpty ? newEntry : "\(existingString)\n\(newEntry)"
-
-               // Save the updated string back to UserDefaults
-               UserDefaults.standard.set(updatedString, forKey: "flutter.PAYLOAD_STRING")
+//               let existingString = UserDefaults.standard.string(forKey: "flutter.PAYLOAD_STRING") ?? ""
+//
+//               // Create a new entry with the current timestamp
+//               let timestamp = Date().timeIntervalSince1970
+//               let newEntry = "\(timestamp):\(jsonString)"
+//
+//               // Append the new entry to the existing string
+//               let updatedString = existingString.isEmpty ? newEntry : "\(existingString)\n\(newEntry)"
+//
+//               // Save the updated string back to UserDefaults
+//               UserDefaults.standard.set(updatedString, forKey: "flutter.PAYLOAD_STRING")
                print("Payload appended to shared preferences successfully.")
            }
        } catch {
