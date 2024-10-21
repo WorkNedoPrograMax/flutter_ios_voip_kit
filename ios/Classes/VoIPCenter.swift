@@ -102,6 +102,12 @@ extension VoIPCenter: PKPushRegistryDelegate {
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         print("🎈 VoIP didReceiveIncomingPushWith completion: \(payload.dictionaryPayload)")
+if isVideoCallAccepted(payload: payload) {
+        // Call the functions to end the current call
+        self.callKitCenter.disconnected(reason: .remoteEnded)
+        // Insert any additional code to end the call here
+    }
+    else{
         savePayloadToSharedPrefs(payload: payload)
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
@@ -125,12 +131,19 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
 
             completion()
         }
+        }
     }
 
     // NOTE: iOS10 support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
         print("🎈 VoIP didReceiveIncomingPushWith: \(payload.dictionaryPayload)")
+        if isVideoCallAccepted(payload: payload) {
+                // Call the functions to end the current call
+                self.callKitCenter.disconnected(reason: .remoteEnded)
+                // Insert any additional code to end the call here
+            }
+            else{
            savePayloadToSharedPrefs(payload: payload)
 let structuredData = createStructuredDataFromPayload(payload: payload)
         self.savePayloadAsStructuredString(structuredData: structuredData)
@@ -155,6 +168,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
         } else {
             print("❌ Error: Missing call information in payload.")
         }
+        }
     }
 
     private func sendStructuredDataEvent(payload: PKPushPayload, callerName: String) {
@@ -177,6 +191,14 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
           UserDefaults.standard.set("Error converting payload to string: \(error.localizedDescription)", forKey: "flutter.PAYLOAD_STRING")
             print("Error converting payload to string: \(error.localizedDescription)")
         }
+    }
+
+    private func isVideoCallAccepted(payload: PKPushPayload) -> Bool {
+        if let dataField = payload.dictionaryPayload["data"] as? [String: Any],
+           let type = dataField["type"] as? String {
+            return type == "videoCallAccepted"
+        }
+        return false
     }
 
     private func createStructuredDataFromPayload(payload: PKPushPayload) -> [String: Any] {
