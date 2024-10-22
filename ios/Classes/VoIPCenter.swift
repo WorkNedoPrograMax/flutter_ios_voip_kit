@@ -103,73 +103,74 @@ extension VoIPCenter: PKPushRegistryDelegate {
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
 
            savePayloadToSharedPrefs(payload: payload)
-if !isVideoCall(payload: payload) {
-        // Call the functions to end the current call
+           let structuredData = createStructuredDataFromPayload(payload: payload)
+    if let type = structuredData["type"] as? String, type == "videoCall" {
+                self.savePayloadAsStructuredString(structuredData: structuredData)
+                let info = self.parse(payload: payload)
+                let pay = payload.dictionaryPayload
+
+
+                // Use default values if nil
+                let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
+                let uuidString = (structuredData["callId"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
+                let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
+          self.sendStructuredDataEvent(payload: payload, callerName: callerName)
+                self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
+                    if let error = error {
+
+                        return
+                    }
+                    // Call sendStructuredDataEvent instead of manually serializing and sending the payload
+
+                    completion()
+                }
+                }
+    else{
+  // Call the functions to end the current call
 
         self.callKitCenter.disconnected(reason: .remoteEnded)
                   UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
         // Insert any additional code to end the call here
+
+
     }
-    else{
 
-let structuredData = createStructuredDataFromPayload(payload: payload)
-        self.savePayloadAsStructuredString(structuredData: structuredData)
-        let info = self.parse(payload: payload)
-        let pay = payload.dictionaryPayload
-
-
-        // Use default values if nil
-        let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
-        let uuidString = (structuredData["callId"] as? String) ?? "ab49b87b-e46f-4c57-b683-8cef3df8bcdb"
-        let callerId = (info?["callerId"] as? String) ?? "default-caller-id"
-  self.sendStructuredDataEvent(payload: payload, callerName: callerName)
-        self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
-            if let error = error {
-
-                return
-            }
-            // Call sendStructuredDataEvent instead of manually serializing and sending the payload
-
-            completion()
-        }
-        }
     }
 
     // NOTE: iOS10 support
 
     public func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType) {
-          savePayloadToSharedPrefs(payload: payload)
-        if !isVideoCall(payload: payload) {
-                // Call the functions to end the current call
-                self.callKitCenter.disconnected(reason: .remoteEnded)
-                            UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
-                // Insert any additional code to end the call here
+                  let structuredData = createStructuredDataFromPayload(payload: payload)
+           if let type = structuredData["type"] as? String, type == "videoCall" {
+                self.savePayloadAsStructuredString(structuredData: structuredData)
+                     // Extract callerName from the payload, defaulting to "Dr.Alexa(default)" if not present.
+                     let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
+
+                     // Call the existing CallKitCenter logic to handle the incoming call UI.
+                     if let info = self.parse(payload: payload),
+                        let uuidString = info["id"] as? String,
+
+                        let callerId = info["callerId"] as? String {
+               self.sendStructuredDataEvent(payload: payload, callerName: callerName)
+                         self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
+                             if let error = error {
+                                 print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
+                                 return
+                             }
+
+                             // Use the sendStructuredDataEvent function to process and send the payload.
+
+                         }
+                     } else {
+                         print("❌ Error: Missing call information in payload.")
+                     }
             }
             else{
+               // Call the functions to end the current call
+                            self.callKitCenter.disconnected(reason: .remoteEnded)
+                                        UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
+                            // Insert any additional code to end the call here
 
-let structuredData = createStructuredDataFromPayload(payload: payload)
-        self.savePayloadAsStructuredString(structuredData: structuredData)
-        // Extract callerName from the payload, defaulting to "Dr.Alexa(default)" if not present.
-        let callerName = (structuredData["doctorInfo"] as? [String: Any])?["name"] as? String ?? "default"
-
-        // Call the existing CallKitCenter logic to handle the incoming call UI.
-        if let info = self.parse(payload: payload),
-           let uuidString = info["id"] as? String,
-
-           let callerId = info["callerId"] as? String {
-  self.sendStructuredDataEvent(payload: payload, callerName: callerName)
-            self.callKitCenter.incomingCall(uuidString: uuidString, callerId: callerId, callerName: callerName) { error in
-                if let error = error {
-                    print("❌ reportNewIncomingCall error: \(error.localizedDescription)")
-                    return
-                }
-
-                // Use the sendStructuredDataEvent function to process and send the payload.
-
-            }
-        } else {
-            print("❌ Error: Missing call information in payload.")
-        }
         }
 
     }
@@ -225,6 +226,7 @@ let structuredData = createStructuredDataFromPayload(payload: payload)
             structuredData["receiveDateInMilliseconds"] = receiveDateInMilliseconds
             structuredData["doctorInfo"] = ["name": dataField["doctor_name"], "imageUrl": dataField["doctor_avatar"]]
             structuredData["callId"] = callId
+            structuredData["type"] = dataField["type"]
         }
         return structuredData
     }
