@@ -127,8 +127,8 @@ extension VoIPCenter: PKPushRegistryDelegate {
                 }
     else{
   // Call the functions to end the current call
-
-        self.callKitCenter.disconnected(reason: .remoteEnded)
+endCurrentCall()
+     //   self.callKitCenter.disconnected(reason: .remoteEnded)
                   UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
         // Insert any additional code to end the call here
 
@@ -167,7 +167,8 @@ extension VoIPCenter: PKPushRegistryDelegate {
             }
             else{
                // Call the functions to end the current call
-                            self.callKitCenter.disconnected(reason: .remoteEnded)
+//                            self.callKitCenter.disconnected(reason: .remoteEnded)
+                           endCurrentCall()
                                         UserDefaults.standard.set("call declined", forKey: "flutter.DECLINED_CALL")
                             // Insert any additional code to end the call here
 
@@ -278,6 +279,40 @@ extension VoIPCenter: CXProviderDelegate {
                          "uuid": self.callKitCenter.uuidString as Any,
                          "incoming_caller_id": self.callKitCenter.incomingCallerId as Any])
     }
+
+   private func endCurrentCall() {
+       // Retrieve the structured data from UserDefaults
+       guard let jsonString = UserDefaults.standard.string(forKey: "flutter.LAST_INCOMING_CALL"),
+             let jsonData = jsonString.data(using: .utf8),
+             let structuredData = try? JSONSerialization.jsonObject(with: jsonData, options: []) as? [String: Any],
+             let callIdString = structuredData["callId"] as? String,
+             let callUUID = UUID(uuidString: callIdString) else {
+           print("Error: Unable to retrieve callId from UserDefaults")
+
+//           // If UUID is not found, execute the provided code
+//           if (self.callKitCenter.isCalleeBeforeAcceptIncomingCall) {
+//               self.eventSink?(["event": EventChannel.onDidRejectIncomingCall.rawValue,
+//                                "uuid": self.callKitCenter.uuidString as Any,
+//                                "incoming_caller_id": self.callKitCenter.incomingCallerId as Any])
+//           }
+//           self.callKitCenter.disconnected(reason: .remoteEnded)
+           return
+       }
+
+       // Create a CXEndCallAction with the retrieved UUID
+       let endCallAction = CXEndCallAction(call: callUUID)
+       let transaction = CXTransaction(action: endCallAction)
+
+       // Request the transaction
+       let callController = CXCallController()
+       callController.request(transaction) { error in
+           if let error = error {
+               print("Error ending call: \(error.localizedDescription)")
+           } else {
+               print("Call ended successfully.")
+           }
+       }
+   }
 
     public func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         print("❎ VoIP CXEndCallAction")
