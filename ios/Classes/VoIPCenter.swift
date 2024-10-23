@@ -289,13 +289,13 @@ extension VoIPCenter: CXProviderDelegate {
              let callUUID = UUID(uuidString: callIdString) else {
            print("Error: Unable to retrieve callId from UserDefaults")
 
-//           // If UUID is not found, execute the provided code
-//           if (self.callKitCenter.isCalleeBeforeAcceptIncomingCall) {
-//               self.eventSink?(["event": EventChannel.onDidRejectIncomingCall.rawValue,
-//                                "uuid": self.callKitCenter.uuidString as Any,
-//                                "incoming_caller_id": self.callKitCenter.incomingCallerId as Any])
-//           }
-//           self.callKitCenter.disconnected(reason: .remoteEnded)
+           // If UUID is not found, execute the provided code
+           if (self.callKitCenter.isCalleeBeforeAcceptIncomingCall) {
+               self.eventSink?(["event": EventChannel.onDidRejectIncomingCall.rawValue,
+                                "uuid": self.callKitCenter.uuidString as Any,
+                                "incoming_caller_id": self.callKitCenter.incomingCallerId as Any])
+           }
+           self.callKitCenter.disconnected(reason: .remoteEnded)
            return
        }
 
